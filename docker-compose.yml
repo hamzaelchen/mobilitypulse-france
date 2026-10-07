@@ -1,0 +1,390 @@
+# MobilityPulse France - phases 1-6 (ingestion, Silver, Gold, PostgreSQL, Grafana, ML, rebalancing). Target footprint: ~5 GB RAM in total.
+name: mobilitypulse
+
+x-spark-common: &spark-common
+  image: mobilitypulse/spark:3.5.7
+  volumes:
+    - ./configs/spark-defaults.conf:/opt/spark-conf/spark-defaults.conf:ro
+    - ./src:/app/src:ro
+    - ./tests:/app/tests:ro
+    - ./data:/data
+  environment: &spark-env
+    SPARK_CONF_DIR: /opt/spark-conf
+    SPARK_WORKER_DIR: /tmp/spark-work
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+services:
+  kafka:
+    image: apache/kafka:3.9.1
+    hostname: kafka
+    ports:
+      - "${KAFKA_HOST_PORT:-39092}:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:${KAFKA_HOST_PORT:-39092}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_HEAP_OPTS: -Xms512m -Xmx512m
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 15s
+    mem_limit: 1g
+
+  kafka-init:
+    image: apache/kafka:3.9.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists
+        --topic ${KAFKA_TOPIC:-gbfs.station_status.v1}
+        --partitions ${KAFKA_TOPIC_PARTITIONS:-3} --replication-factor 1
+    mem_limit: 256m
+
+  producer:
+    build:
+      context: .
+      dockerfile: docker/producer.Dockerfile
+    image: mobilitypulse/producer:0.1.0
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    environment:
+      GBFS_DISCOVERY_URL: ${GBFS_DISCOVERY_URL:-https://api.cyclocity.fr/contracts/nantes/gbfs/gbfs.json}
+      GBFS_SOURCE_NAME: ${GBFS_SOURCE_NAME:-naolib-nantes}
+      GBFS_LANGUAGE: ${GBFS_LANGUAGE:-fr}
+      GBFS_FIXTURE_DIR: ${GBFS_FIXTURE_DIR:-}
+      POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-60}
+      HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-10}
+      STATION_INFO_REFRESH_SECONDS: ${STATION_INFO_REFRESH_SECONDS:-3600}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-gbfs.station_status.v1}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./tests/fixtures:/app/tests/fixtures:ro
+    mem_limit: 256m
+
+  spark-master:
+    <<: *spark-common
+    build:  # single build for the shared Spark image (worker and bronze-job reuse it)
+      context: .
+      dockerfile: docker/spark.Dockerfile
+    hostname: spark-master
+    command: ["spark-class", "org.apache.spark.deploy.master.Master", "--host", "spark-master"]
+    ports:
+      - "${SPARK_MASTER_UI_PORT:-18080}:8080"
+    mem_limit: 768m
+
+  spark-worker:
+    <<: *spark-common
+    hostname: spark-worker
+    depends_on:
+      - spark-master
+    command: ["spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077",
+              "--cores", "1", "--memory", "1g"]
+    ports:
+      - "${SPARK_WORKER_UI_PORT:-18081}:8081"
+    mem_limit: 2g
+
+  bronze-job:
+    <<: *spark-common
+    hostname: bronze-job
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      spark-worker:
+        condition: service_started
+    restart: on-failure
+    environment:
+      <<: *spark-env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-gbfs.station_status.v1}
+      DATA_DIR: /data
+      SPARK_TRIGGER_INTERVAL: ${SPARK_TRIGGER_INTERVAL:-30 seconds}
+      SPARK_MAX_OFFSETS_PER_TRIGGER: ${SPARK_MAX_OFFSETS_PER_TRIGGER:-10000}
+      SPARK_STARTING_OFFSETS: ${SPARK_STARTING_OFFSETS:-earliest}
+    command:
+      - spark-submit
+      - --master=spark://spark-master:7077
+      - --conf=spark.driver.host=bronze-job
+      - --conf=spark.driver.bindAddress=0.0.0.0
+      - --conf=spark.driver.memory=768m
+      - --conf=spark.executor.memory=1g
+      - --conf=spark.cores.max=1
+      - /app/src/streaming/bronze_job.py
+    ports:
+      - "${SPARK_DRIVER_UI_PORT:-14040}:4040"
+    mem_limit: 1536m
+
+  # Silver runs in local mode: the single worker core is already taken by bronze-job.
+  silver-job:
+    <<: *spark-common
+    hostname: silver-job
+    restart: on-failure
+    environment:
+      <<: *spark-env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092  # required by the shared settings, unused here
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-gbfs.station_status.v1}
+      DATA_DIR: /data
+      SPARK_TRIGGER_INTERVAL: ${SPARK_TRIGGER_INTERVAL:-30 seconds}
+      SILVER_WATERMARK_DELAY: ${SILVER_WATERMARK_DELAY:-24 hours}
+      SILVER_MAX_FILES_PER_TRIGGER: ${SILVER_MAX_FILES_PER_TRIGGER:-50}
+    command:
+      - spark-submit
+      - --master=local[2]
+      - --conf=spark.driver.memory=768m
+      - /app/src/streaming/silver_job.py
+    ports:
+      - "${SPARK_SILVER_UI_PORT:-14041}:4040"
+    mem_limit: 1g
+
+  # On demand only: docker compose run --rm compact-bronze [--dry-run]
+  compact-bronze:
+    <<: *spark-common
+    profiles: ["tools"]
+    environment:
+      <<: *spark-env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092  # required by the shared settings, unused here
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-gbfs.station_status.v1}
+      DATA_DIR: /data
+    command: ["python", "-m", "streaming.compact_bronze"]
+    mem_limit: 1g
+
+  # On demand only: docker compose run --rm gold-job [--as-of ISO] [--every SECONDS]
+  gold-job:
+    <<: *spark-common
+    profiles: ["tools"]
+    environment:
+      <<: *spark-env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092  # required by the shared settings, unused here
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-gbfs.station_status.v1}
+      DATA_DIR: /data
+      GOLD_SERIES_DAYS: ${GOLD_SERIES_DAYS:-7}
+    command: ["python", "-m", "streaming.gold_job"]
+    mem_limit: 1g
+
+  # On demand only: docker compose run --rm ml-job [--force] [--test-fraction 0.3]
+  ml-job:
+    <<: *spark-common
+    profiles: ["tools"]
+    environment:
+      <<: *spark-env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092  # required by the shared settings, unused here
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-gbfs.station_status.v1}
+      DATA_DIR: /data
+    command: ["python", "-m", "ml.train"]
+    mem_limit: 1536m
+
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mobilitypulse}
+      POSTGRES_USER: ${POSTGRES_USER:-mobilitypulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}
+    ports:
+      - "${POSTGRES_HOST_PORT:-15432}:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    mem_limit: 512m
+
+  grafana:
+    image: grafana/grafana-oss:11.3.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      # Read by the provisioned datasource (grafana/provisioning/datasources).
+      POSTGRES_DB: ${POSTGRES_DB:-mobilitypulse}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:-grafana_ro}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?Set GRAFANA_DB_PASSWORD in .env}
+    ports:
+      - "${GRAFANA_HOST_PORT:-13000}:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    mem_limit: 512m
+
+  # Dashboard UI (read-only): http://localhost:${WEB_HOST_PORT:-18000}
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    image: mobilitypulse/web:0.1.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-mobilitypulse}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:-grafana_ro}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?Set GRAFANA_DB_PASSWORD in .env}
+      STREAM_POLL_SECONDS: ${STREAM_POLL_SECONDS:-2}
+      PROJECT_REPO_URL: ${PROJECT_REPO_URL:-}
+    ports:
+      - "${WEB_HOST_PORT:-18000}:8000"
+    volumes:
+      - ./src:/app/src:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/healthz', timeout=4)"]
+      interval: 15s
+      timeout: 6s
+      retries: 5
+    mem_limit: 256m
+
+  # Live path: tails the new Silver files and keeps station_current + the rebalancing priorities
+  # up to date (seconds after Silver writes them), and loads the Gold series/hourly tables when
+  # the Gold job has written new files. Applies the migrations first (idempotent).
+  live-updater:
+    image: mobilitypulse/loader:0.1.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-mobilitypulse}
+      POSTGRES_USER: ${POSTGRES_USER:-mobilitypulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:-grafana_ro}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?Set GRAFANA_DB_PASSWORD in .env}
+      DATA_DIR: /data
+      MIGRATIONS_DIR: /app/sql/migrations
+      LIVE_INTERVAL_SECONDS: ${LIVE_INTERVAL_SECONDS:-10}
+    command: ["sh", "-c", "python -m loader.main --migrate-only && exec python -m live.updater"]
+    volumes:
+      - ./src:/app/src:ro
+      - ./sql:/app/sql:ro
+      - ./data:/data:ro
+    stop_grace_period: 15s
+    mem_limit: 192m
+
+  # Heavy aggregates (15-minute series, hourly rates): the Gold job re-run on a schedule, one
+  # process per cycle (no resident JVM). The loader of the live-updater picks the files up.
+  gold-refresher:
+    <<: *spark-common
+    restart: unless-stopped
+    environment:
+      <<: *spark-env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092  # required by the shared settings, unused here
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-gbfs.station_status.v1}
+      DATA_DIR: /data
+      GOLD_SERIES_DAYS: ${GOLD_SERIES_DAYS:-7}
+      GOLD_REFRESH_SECONDS: ${GOLD_REFRESH_SECONDS:-900}
+    command: ["python", "-m", "streaming.gold_refresher"]
+    stop_grace_period: 40s
+    mem_limit: 1g
+
+  # On demand only: docker compose run --rm loader [--migrate-only] [--days N] [--skip-current]
+  loader:
+    build:
+      context: .
+      dockerfile: docker/loader.Dockerfile
+    image: mobilitypulse/loader:0.1.0
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-mobilitypulse}
+      POSTGRES_USER: ${POSTGRES_USER:-mobilitypulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:-grafana_ro}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?Set GRAFANA_DB_PASSWORD in .env}
+      DATA_DIR: /data
+      MIGRATIONS_DIR: /app/sql/migrations
+    volumes:
+      - ./src:/app/src:ro
+      - ./sql:/app/sql:ro
+      - ./tests:/app/tests:ro
+      - ./data:/data:ro
+    mem_limit: 512m
+
+  # On demand only: docker compose run --rm rebalance-job [--force] [--max-distance-km 3]
+  rebalance-job:
+    image: mobilitypulse/loader:0.1.0
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-mobilitypulse}
+      POSTGRES_USER: ${POSTGRES_USER:-mobilitypulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    command: ["python", "-m", "prescriptive.job"]
+    volumes:
+      - ./src:/app/src:ro
+    mem_limit: 256m
+
+  # On demand only. Order: quality-lake (Spark, writes data/quality/lake_latest.json), then quality.
+  quality-lake:
+    <<: *spark-common
+    profiles: ["tools"]
+    environment:
+      <<: *spark-env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092  # required by the shared settings, unused here
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-gbfs.station_status.v1}
+      DATA_DIR: /data
+    command: ["python", "-m", "quality.lake_checks"]
+    mem_limit: 1536m
+
+  quality:
+    image: mobilitypulse/loader:0.1.0
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-mobilitypulse}
+      POSTGRES_USER: ${POSTGRES_USER:-mobilitypulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      DATA_DIR: /data
+    command: ["python", "-m", "quality.run"]
+    volumes:
+      - ./src:/app/src:ro
+      - ./data:/data:ro
+    mem_limit: 256m
+
+volumes:
+  kafka-data:
+  pg-data:
+  grafana-data:

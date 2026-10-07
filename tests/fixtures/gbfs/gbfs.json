@@ -1,0 +1,19 @@
+{
+ "last_updated": 1791299325,
+ "ttl": 3600,
+ "version": "2.3",
+ "data": {
+  "fr": {
+   "feeds": [
+    {
+     "name": "station_information",
+     "url": "https://api.cyclocity.fr/contracts/nantes/gbfs/v2/station_information.json"
+    },
+    {
+     "name": "station_status",
+     "url": "https://api.cyclocity.fr/contracts/nantes/gbfs/v2/station_status.json"
+    }
+   ]
+  }
+ }
+}

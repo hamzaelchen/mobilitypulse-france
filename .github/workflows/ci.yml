@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # Fast feedback: lint, formatting and every test that needs neither Java nor PostgreSQL.
+  lint-and-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e ".[dev,web]"
+      - run: ruff check .
+      - run: ruff format --check .
+      # Spark and PostgreSQL tests are skipped here by design; the jobs below really run them.
+      # The web extra (FastAPI, psycopg) lets the page, stream and static-asset tests run here;
+      # node (preinstalled on the runner) checks the front-end scripts.
+      - run: pytest -q -rs
+
+  # Spark Structured Streaming, Gold, ML and lake-quality tests (local Spark, no Kafka needed).
+  spark-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SPARK_LOCAL_IP: 127.0.0.1
+      CI_REQUIRE_SERVICES: "1" # a missing Java FAILS the tests instead of skipping them
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e ".[dev,spark]"
+      - run: >-
+          pytest -q -rs --junitxml=junit-spark.xml
+          tests/unit/test_spark_validation.py
+          tests/unit/test_silver.py
+          tests/unit/test_gold.py
+          tests/unit/test_ml.py
+          tests/unit/test_quality_lake.py
+      # A green run made of skipped tests proves nothing: none may be skipped.
+      - run: python scripts/ci_assert_skips.py junit-spark.xml --max-skipped 0 --min-tests 30
+
+  # Migrations, loader, rebalancing and quality checks against a real PostgreSQL 16.
+  postgres-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI_REQUIRE_SERVICES: "1" # an unreachable database FAILS the tests instead of skipping them
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e ".[dev,loader,web]"
+      # The password is generated for this run only, masked in the logs and never stored.
+      - name: Start PostgreSQL with a throwaway password
+        run: |
+          password="$(openssl rand -hex 16)"
+          echo "::add-mask::${password}"
+          {
+            echo "POSTGRES_PASSWORD=${password}"
+            echo "POSTGRES_DB=mobilitypulse_ci"
+            echo "POSTGRES_USER=mobilitypulse_ci"
+            echo "POSTGRES_HOST=localhost"
+            echo "POSTGRES_PORT=5432"
+          } >> "$GITHUB_ENV"
+          docker run -d --name pg -p 5432:5432 \
+            -e "POSTGRES_PASSWORD=${password}" \
+            -e POSTGRES_DB=mobilitypulse_ci \
+            -e POSTGRES_USER=mobilitypulse_ci \
+            postgres:16.4-alpine
+          for _ in $(seq 1 30); do
+            if docker exec pg pg_isready -U mobilitypulse_ci -d mobilitypulse_ci; then exit 0; fi
+            sleep 2
+          done
+          docker logs pg
+          exit 1
+      - run: >-
+          pytest -q -rs --junitxml=junit-pg.xml
+          tests/integration
+          tests/unit/test_loader_pure.py
+          tests/unit/test_prescriptive.py
+          tests/unit/test_quality_core.py
+          tests/unit/test_live_state.py
+          tests/unit/test_live_tail.py
+          tests/unit/test_live_settings.py
+          tests/unit/test_web_status.py
+          tests/unit/test_web_stream.py
+          tests/unit/test_web_pages.py
+          tests/unit/test_web_assets.py
+          tests/unit/test_web_js.py
+      # One test is allowed to skip: the loader/Spark schema comparison needs PySpark, which this
+      # job does not install (the Spark job runs it).
+      - run: python scripts/ci_assert_skips.py junit-pg.xml --max-skipped 1 --min-tests 170
+
+  # The compose file must stay valid, including the on-demand "tools" profile.
+  compose-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose config -q
+      - run: docker compose --profile tools config -q

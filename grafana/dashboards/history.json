@@ -1,0 +1,296 @@
+{
+  "uid": "mp-history",
+  "title": "Station history",
+  "description": "15-minute series per station and hourly shares of empty / full stations.",
+  "tags": [
+    "mobilitypulse"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "timezone": "utc",
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "station",
+        "label": "Station",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "mobilitypulse-pg"
+        },
+        "query": "SELECT station_name AS __text, station_id AS __value FROM mobility.station_current ORDER BY 1",
+        "refresh": 1,
+        "sort": 1,
+        "includeAll": false,
+        "multi": false,
+        "current": {},
+        "options": []
+      },
+      {
+        "name": "min_coverage",
+        "label": "Min. station coverage",
+        "type": "custom",
+        "query": "0.5,0.8,0.9,0.95,0.99",
+        "current": {
+          "selected": true,
+          "text": "0.95",
+          "value": "0.95"
+        },
+        "options": [
+          {
+            "selected": false,
+            "text": "0.5",
+            "value": "0.5"
+          },
+          {
+            "selected": false,
+            "text": "0.8",
+            "value": "0.8"
+          },
+          {
+            "selected": false,
+            "text": "0.9",
+            "value": "0.9"
+          },
+          {
+            "selected": true,
+            "text": "0.95",
+            "value": "0.95"
+          },
+          {
+            "selected": false,
+            "text": "0.99",
+            "value": "0.99"
+          }
+        ],
+        "multi": false,
+        "includeAll": false
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Bikes available - $station (last reading of each 15-minute slot, with min / mean / max)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH g AS (SELECT generate_series(to_timestamp(floor(extract(epoch FROM $__timeFrom()::timestamptz) / 900) * 900), $__timeTo()::timestamptz, interval '15 minutes') AS t) SELECT g.t AS time, s.bikes_available, s.min_bikes_available, s.mean_bikes_available, s.max_bikes_available FROM g LEFT JOIN mobility.station_series_15min s ON s.slot_start = g.t AND s.station_id = '$station' ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "description": "From the readings taken every ~60 s (the time axis is the poll time). min / mean / max summarize all the readings of the slot. A slot without any reading (pipeline stopped) is a break in the line: nothing is carried over."
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Share of empty / full / out-of-service stations per hour (coverage >= $min_coverage)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH g AS (SELECT generate_series(date_trunc('hour', $__timeFrom()::timestamptz), $__timeTo()::timestamptz, interval '1 hour') AS t) SELECT g.t AS time, r.empty_rate AS \"empty\", r.full_rate AS \"full\", r.non_operational_rate AS \"out of service\" FROM g LEFT JOIN mobility.station_hourly_rates r ON r.hour_start = g.t AND r.station_coverage >= $min_coverage ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "description": "empty / full: share of OPERATIONAL station-slots. Hours where fewer stations were observed than the minimum coverage chosen above (pipeline stopped, partial first hour) are hidden: their rates describe only part of the network."
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Station coverage per hour (all hours, not filtered)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH g AS (SELECT generate_series(date_trunc('hour', $__timeFrom()::timestamptz), $__timeTo()::timestamptz, interval '1 hour') AS t) SELECT g.t AS time, r.station_coverage FROM g LEFT JOIN mobility.station_hourly_rates r ON r.hour_start = g.t ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "description": "Stations with at least one reading during the hour / stations seen in the window."
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Last loads into PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT dataset, loaded_at, rows_read, inserted, updated, unchanged, deleted FROM mobility.load_log ORDER BY loaded_at DESC, id DESC LIMIT 12",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    }
+  ]
+}

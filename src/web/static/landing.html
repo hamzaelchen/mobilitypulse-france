@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MobilityPulse France</title>
+<meta name="description" content="Aide à la décision pour les vélos en libre-service de Nantes : où manquent les vélos, où manquent les places, que déplacer.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070b14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2034%2034'%3E%3Crect%20width='34'%20height='34'%20rx='9'%20fill='%23101a2e'/%3E%3Cg%20fill='none'%20stroke='%238db4ff'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='9'%20cy='22'%20r='5.5'/%3E%3Ccircle%20cx='25'%20cy='22'%20r='5.5'/%3E%3Cpath%20d='M9%2022l4-10h9l3%2010M9%2022h7l-3-10M16%2022l6-10M11%209.5h4M22%2012V9h3'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body class="landing">
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#101a2e" stroke="#2a3d63"/><g fill="none" stroke="#8db4ff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="22" r="5.5"/><circle cx="25" cy="22" r="5.5"/><path d="M9 22l4-10h9l3 10M9 22h7l-3-10M16 22l6-10M11 9.5h4M22 12V9h3"/></g></svg>
+      MobilityPulse France
+    </a>
+    <span class="spacer"></span>
+    <a class="plain" href="/app">Application</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="titre">
+    <canvas id="net" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div class="hero-copy">
+        <h1 id="titre">Où manquent les vélos, où manquent les places ?</h1>
+        <p class="lead" data-in>MobilityPulse suit les stations de vélos en libre-service de Nantes, repère celles qui sont vides ou saturées, et propose quels vélos déplacer d'où vers où.</p>
+        <p class="now" id="now" data-in aria-live="polite">
+          <span class="label" id="now-label">En ce moment</span>
+          <span class="fig" style="--c: var(--empty)"><i></i><b id="n-empty">–</b> vides</span>
+          <span class="fig" style="--c: var(--full)"><i></i><b id="n-full">–</b> saturées</span>
+          <span class="fig">sur <b id="n-stations">–</b> stations suivies</span>
+        </p>
+        <p class="now" id="now-error" hidden>Chiffres indisponibles : l'API ne répond pas pour le moment. Aucun chiffre n'est affiché plutôt qu'un chiffre inventé.</p>
+        <div class="cta" data-in>
+          <a class="btn primary" href="/app">Accéder au projet<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5"/></svg></a>
+          <a class="btn" href="/api/docs" data-second>Documentation de l'API</a>
+        </div>
+        <p class="live-line" data-in><span class="dot" id="dot"></span><span id="live-when">chargement…</span></p>
+        <p class="demo-note" id="demo-note" hidden>Démo figée : ces chiffres sont une capture de données réelles. Le projet complet collecte et met le réseau à jour en continu ; cette page n'en est qu'une photographie.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="probleme">
+    <div class="wrap problem">
+      <div data-reveal>
+        <h2 id="probleme">Des stations vides d'un côté, pleines de l'autre</h2>
+        <p class="prose">Dans un réseau de vélos en libre-service, certaines stations se vident pendant que d'autres se remplissent. Pour l'usager, c'est un trajet raté : pas de vélo à prendre, ou pas de place pour le reposer.</p>
+        <p class="prose">Pour l'opérateur, c'est du rééquilibrage : déplacer des vélos en camion, sans savoir précisément où ni quand.</p>
+        <p class="question">Quelles stations vont manquer de vélos ou de places, et quels vélos faut-il déplacer d'où vers où ?</p>
+      </div>
+      <div class="stations" role="group" aria-label="Illustration : une station vide et une station saturée">
+        <figure class="station" style="margin:0; --c: var(--empty)">
+          <div class="slots" aria-hidden="true">
+            <i class="slot" style="--k:0"></i><i class="slot" style="--k:1"></i><i class="slot" style="--k:2"></i><i class="slot" style="--k:3"></i><i class="slot" style="--k:4"></i><i class="slot" style="--k:5"></i><i class="slot" style="--k:6"></i><i class="slot" style="--k:7"></i><i class="slot" style="--k:8"></i><i class="slot" style="--k:9"></i>
+          </div>
+          <figcaption><b>Station vide</b><span>0 vélo · 10 places</span></figcaption>
+        </figure>
+        <figure class="station" style="margin:0; --c: var(--full)">
+          <div class="slots" aria-hidden="true">
+            <i class="slot has" style="--k:0"></i><i class="slot has" style="--k:1"></i><i class="slot has" style="--k:2"></i><i class="slot has" style="--k:3"></i><i class="slot has" style="--k:4"></i><i class="slot has" style="--k:5"></i><i class="slot has" style="--k:6"></i><i class="slot has" style="--k:7"></i><i class="slot has" style="--k:8"></i><i class="slot has" style="--k:9"></i>
+          </div>
+          <figcaption><b>Station saturée</b><span>10 vélos · 0 place</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="niveaux">
+    <div class="wrap">
+      <h2 id="niveaux" data-reveal>Trois niveaux de réponse</h2>
+      <div class="ladder">
+        <article class="rung" data-reveal style="--i:1">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="14" cy="14" r="4"/><circle cx="28" cy="14" r="4"/><circle cx="42" cy="14" r="4"/><circle cx="14" cy="28" r="4"/><circle cx="28" cy="28" r="4" stroke="#e66767"/><circle cx="42" cy="28" r="4"/><circle cx="14" cy="42" r="4"/><circle cx="28" cy="42" r="4"/><circle cx="42" cy="42" r="4" stroke="#9085e9"/></svg>
+          <div><h3>Descriptif</h3><span class="tag on">en service</span></div>
+          <p>Que se passe-t-il maintenant ? La carte du réseau, les stations vides, saturées ou hors service, et l'historique par quart d'heure et par heure.</p>
+        </article>
+        <article class="rung" data-reveal style="--i:2">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><path d="M6 40 17 30l9 5 10-14"/><path d="M36 21l14-8" stroke-dasharray="3 5"/><circle cx="36" cy="21" r="2.5"/></svg>
+          <div><h3>Prédictif</h3><span class="tag part">heuristique</span></div>
+          <p>Que va-t-il se passer ? Aujourd'hui, une extrapolation de la tendance des 30 dernières minutes. Aucun modèle d'apprentissage n'est encore entraîné : l'historique collecté est trop court.</p>
+        </article>
+        <article class="rung" data-reveal style="--i:3">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="12" cy="28" r="6" stroke="#9085e9"/><circle cx="44" cy="28" r="6" stroke="#e66767"/><path d="M20 28h16M31 22l6 6-6 6"/></svg>
+          <div><h3>Prescriptif</h3><span class="tag on">en service</span></div>
+          <p>Que faire ? Un classement des stations à traiter en priorité et des transferts suggérés entre stations proches, avec le nombre de vélos et la distance.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="chemin">
+    <div class="wrap">
+      <h2 id="chemin" data-reveal>Le chemin d'une mesure, du flux à l'écran</h2>
+      <div class="line" data-reveal>
+        <div class="rail" aria-hidden="true"><i class="packet" style="--p:0"></i><i class="packet" style="--p:1"></i></div>
+        <ol class="stops">
+        <li class="stop" style="--d:0s"><h3>GBFS</h3><p>Le flux ouvert du réseau Naolib, interrogé toutes les 60 secondes.</p></li>
+        <li class="stop" style="--d:1.5s"><h3>Kafka</h3><p>Chaque relevé de station est publié comme un message.</p></li>
+        <li class="stop" style="--d:0s"><h3>Spark</h3><p>Nettoyage et dédoublonnage en continu, puis agrégats.</p></li>
+        <li class="stop" style="--d:1.5s"><h3>PostgreSQL</h3><p>L'état courant, les priorités et les séries, lus en lecture seule.</p></li>
+        <li class="stop" style="--d:0s"><h3>Cette interface</h3><p data-demo="Affiche les données du projet, avec leur âge réel (ici figé).">Mise à jour en direct, avec l'âge réel des données affiché.</p></li>
+        </ol>
+      </div>
+      <p class="caption" data-reveal>Schéma du trajet d'une mesure. Les délais réels sont affichés dans l'application : ils varient de quelques dizaines de secondes à quelques minutes.</p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="honnete">
+    <div class="wrap">
+      <h2 id="honnete" data-reveal>Ce qui est fait, et ce qui ne l'est pas</h2>
+      <div class="two">
+        <div class="yes" data-reveal style="--i:1">
+          <h3>Ce que le projet fait</h3>
+          <ul>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Collecte le réseau toutes les 60 secondes, sans intervention.</li>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Met à jour l'état des stations et les priorités automatiquement, peu après chaque collecte.</li>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Classe les stations à traiter par une <b>heuristique de tendance</b> et propose des transferts.</li>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Affiche l'âge réel des données et signale une collecte interrompue, au lieu de présenter de vieux chiffres comme actuels.</li>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>Contrôle la qualité des données à chaque couche.</li>
+          </ul>
+        </div>
+        <div class="no" data-reveal style="--i:2">
+          <h3>Ce qu'il ne fait pas encore</h3>
+          <ul>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10"/></svg>Aucun modèle prédictif entraîné : l'historique collecté est trop court.</li>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10"/></svg>Les transferts sont des suggestions, pas des ordres : ni trafic, ni capacité des camions.</li>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10"/></svg>Un seul réseau (Nantes), pas de comparaison entre villes.</li>
+            <li><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10"/></svg>Pas de temps réel strict : le retard varie de quelques dizaines de secondes à quelques minutes, et il est affiché en direct.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="close" aria-labelledby="fin">
+    <div class="wrap" data-reveal>
+      <h2 id="fin" data-demo="Explorer la capture du réseau">Voir le réseau respirer</h2>
+      <p class="prose" data-demo="La carte, les priorités et les transferts sont ceux d'un instant réel, figé pour cette démonstration.">La carte, les priorités et les transferts se mettent à jour sous vos yeux.</p>
+      <div class="cta">
+        <a class="btn primary" href="/app">Accéder au projet<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5"/></svg></a>
+        <a class="btn" href="/api/docs" data-second>Documentation de l'API</a>
+      </div>
+      <p class="foot" data-demo="Données : flux GBFS ouvert du réseau Naolib (Nantes Métropole). Les chiffres de cette page sont une capture figée de l'API du projet.">Données : flux GBFS ouvert du réseau Naolib (Nantes Métropole). Les chiffres de cette page sont lus en direct auprès de l'API du projet.</p>
+    </div>
+  </section>
+</main>
+
+<script src="/js/common.js"></script>
+<script src="/js/landing.js"></script>
+</body>
+</html>

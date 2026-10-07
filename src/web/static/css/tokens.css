@@ -1,0 +1,128 @@
+/* Shared design tokens and base for the landing page and the application.
+   Dark control-room world: ink ground, hairline wayfinding lines, state colours validated for dark
+   surfaces (CVD-safe adjacent order: vide, saturée, faible, élevée, normale). */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url(/fonts/bricolage-grotesque-latin-wght-normal.woff2) format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url(/fonts/hanken-grotesk-latin-wght-normal.woff2) format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Spline Sans Mono";
+  src: url(/fonts/spline-sans-mono-latin-wght-normal.woff2) format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  --ground: #070b14;
+  --panel: #0c1322;
+  --panel-2: #101a2e;
+  --raise: #16233b;
+  --line: #1b2a47;
+  --line-2: #2a3d63;
+
+  --text: #e8eefb;
+  --text-2: #a8b5cf;
+  --text-3: #8493b0;
+
+  /* Station states. Order = legend order (validated adjacent pairs). */
+  --empty: #e66767;
+  --full: #9085e9;
+  --low: #c98500;
+  --high: #3987e5;
+  --ok: #199e70;
+  --oos: #6b7a90;
+  --flow: #8db4ff;
+  --warn: #e0a526;
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ui: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Spline Sans Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--ui);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  scrollbar-color: var(--line-2) transparent;
+}
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; }
+p { text-wrap: pretty; }
+a { color: var(--flow); text-underline-offset: 3px; }
+button { font: inherit; color: inherit; }
+code { font-family: var(--mono); font-size: 0.92em; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+::selection { background: rgba(141, 180, 255, 0.34); color: #fff; }
+:focus-visible { outline: 2px solid var(--flow); outline-offset: 3px; border-radius: 6px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 8px; border: 2px solid var(--ground); }
+::-webkit-scrollbar-track { background: transparent; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Buttons: light primary on the dark ground, quiet secondary. Press feedback on every one. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 48px; padding: 0 22px; border-radius: 12px;
+  font: 600 16px/1 var(--ui); text-decoration: none; cursor: pointer;
+  border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text);
+  transition: transform 140ms var(--ease-out), background-color 160ms ease, border-color 160ms ease;
+}
+.btn.primary { background: var(--text); border-color: var(--text); color: #0a1020; }
+.btn svg { width: 18px; height: 18px; flex: none; transition: transform 220ms var(--ease-out); }
+.btn:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { border-color: var(--flow); }
+  .btn.primary:hover { background: #fff; }
+  .btn:hover svg { transform: translateX(3px); }
+}
+
+/* Live status dot, shared by both pages. */
+.dot {
+  position: relative; width: 10px; height: 10px; border-radius: 50%; background: var(--oos); flex: none;
+}
+.dot.live { background: var(--ok); }
+.dot.delayed { background: var(--warn); }
+.dot.stale { background: var(--empty); }
+.dot.live::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--ok);
+  opacity: 0; transform: scale(1);
+}
+.dot.live.beat::after { animation: beat 900ms var(--ease-out); }
+@keyframes beat {
+  0% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  .btn, .btn svg { transition: none; }
+  .btn:active { transform: none; }
+  .dot.live.beat::after { animation: none; }
+}

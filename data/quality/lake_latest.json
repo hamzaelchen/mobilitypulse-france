@@ -1,0 +1,93 @@
+{
+  "checked_at": "2026-10-07T08:51:51.076701+00:00",
+  "results": [
+    {
+      "layer": "lake",
+      "name": "bronze_rows",
+      "status": "PASS",
+      "value": 35595.0,
+      "threshold": "informational",
+      "detail": "informational"
+    },
+    {
+      "layer": "lake",
+      "name": "silver_rows",
+      "status": "PASS",
+      "value": 35490.0,
+      "threshold": "informational",
+      "detail": "informational"
+    },
+    {
+      "layer": "lake",
+      "name": "bronze_duplicate_coordinates",
+      "status": "PASS",
+      "value": 0.0,
+      "threshold": "warn > 0",
+      "detail": "Bronze is at-least-once: a replayed batch may duplicate rows"
+    },
+    {
+      "layer": "lake",
+      "name": "silver_rows_not_in_bronze",
+      "status": "PASS",
+      "value": 0.0,
+      "threshold": "fail > 0",
+      "detail": "every Silver row must come from a Bronze row"
+    },
+    {
+      "layer": "lake",
+      "name": "bronze_rows_missing_in_silver_over_10min",
+      "status": "PASS",
+      "value": 0.0,
+      "threshold": "fail > 0",
+      "detail": "Bronze rows older than 10 min that Silver never produced"
+    },
+    {
+      "layer": "lake",
+      "name": "silver_duplicate_business_keys",
+      "status": "PASS",
+      "value": 0.0,
+      "threshold": "fail > 0",
+      "detail": "same station twice in the same poll"
+    },
+    {
+      "layer": "lake",
+      "name": "rejected_share",
+      "status": "PASS",
+      "value": 0.00019661816751867872,
+      "threshold": "warn > 0.01, fail > 0.05",
+      "detail": "7 rejected of 35602 messages (includes deliberate test injections)"
+    },
+    {
+      "layer": "lake",
+      "name": "stations_per_poll_min_ratio",
+      "status": "PASS",
+      "value": 1.0,
+      "threshold": "warn < 0.95, fail < 0.5",
+      "detail": "fewest / most stations in a poll, over 339 polls"
+    },
+    {
+      "layer": "lake",
+      "name": "poll_gap_max_minutes",
+      "status": "WARN",
+      "value": 624.85,
+      "threshold": "warn > 3",
+      "detail": "3 gap(s) > 3 min in the retained Bronze history"
+    },
+    {
+      "layer": "lake",
+      "name": "bronze_freshness_minutes",
+      "status": "PASS",
+      "value": 0.3333333333333333,
+      "threshold": "warn > 5, fail > 30",
+      "detail": "age of the newest Bronze poll"
+    },
+    {
+      "layer": "lake",
+      "name": "silver_lag_minutes",
+      "status": "PASS",
+      "value": 1.0166666666666666,
+      "threshold": "warn > 5, fail > 30",
+      "detail": "newest Bronze poll minus newest Silver poll"
+    }
+  ]
+}

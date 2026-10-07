@@ -1,0 +1,21 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local data lake: keep the folders, ignore their content
+data/bronze/*
+data/silver/*
+data/gold/*
+data/ml/*
+data/rejected/*
+data/checkpoints/*
+!data/*/.gitkeep
+
+# Frozen demo: built by scripts/build_demo.py (the snapshot in demo/data IS committed)
+demo-site/
+# Browser-tool scratch
+.playwright-mcp/

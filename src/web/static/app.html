@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MobilityPulse France · Application</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070b14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2034%2034'%3E%3Crect%20width='34'%20height='34'%20rx='9'%20fill='%23101a2e'/%3E%3Cg%20fill='none'%20stroke='%238db4ff'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='9'%20cy='22'%20r='5.5'/%3E%3Ccircle%20cx='25'%20cy='22'%20r='5.5'/%3E%3Cpath%20d='M9%2022l4-10h9l3%2010M9%2022h7l-3-10M16%2022l6-10M11%209.5h4M22%2012V9h3'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/app.css">
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body class="app">
+<a class="skip" href="#main">Aller au contenu</a>
+
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" href="/" title="Retour à la présentation">
+      <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#101a2e" stroke="#2a3d63"/><g fill="none" stroke="#8db4ff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="22" r="5.5"/><circle cx="25" cy="22" r="5.5"/><path d="M9 22l4-10h9l3 10M9 22h7l-3-10M16 22l6-10M11 9.5h4M22 12V9h3"/></g></svg>
+      <span>MobilityPulse France</span>
+    </a>
+    <span class="bar-sub">Vélos en libre-service · Naolib, Nantes</span>
+    <span class="spacer"></span>
+    <div class="status-pill" id="live" role="status"><span class="dot" id="dot"></span><span id="liveText">Connexion…</span></div>
+    <button class="icon-btn" id="refresh" type="button" aria-label="Actualiser les données">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+    </button>
+  </header>
+
+  <div class="banner-wrap" id="bannerWrap"><div class="banner" role="status"><div class="banner-in" id="banner"></div></div></div>
+
+  <main id="main">
+    <section class="kpis" id="kpis" aria-label="Indicateurs du réseau"></section>
+
+    <div class="grid">
+      <section class="panel map-card" aria-labelledby="h-map">
+        <div class="panel-h">
+          <h2 id="h-map">Carte du réseau</h2>
+          <div class="tools">
+            <label class="search-wrap"><span class="sr-only">Rechercher une station</span>
+              <input class="search" id="search" type="search" placeholder="Rechercher une station" autocomplete="off">
+            </label>
+            <div class="chips" id="chips" role="group" aria-label="Filtrer les stations">
+              <button class="chip" type="button" data-f="all" aria-pressed="true">Toutes</button>
+              <button class="chip" type="button" data-f="empty" aria-pressed="false" style="--c:var(--empty)"><i></i>Vides <span class="n" id="c-empty"></span></button>
+              <button class="chip" type="button" data-f="full" aria-pressed="false" style="--c:var(--full)"><i></i>Saturées <span class="n" id="c-full"></span></button>
+              <button class="chip" type="button" data-f="oos" aria-pressed="false" style="--c:var(--oos)"><i></i>Hors service <span class="n" id="c-oos"></span></button>
+              <button class="chip" type="button" id="toggleTransfers" aria-pressed="true">Transferts</button>
+            </div>
+          </div>
+        </div>
+        <div id="map">
+          <div class="legend" id="legend"></div>
+          <div class="station-pop" id="pop" role="dialog" aria-label="Détail de la station" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <aside class="panel side" aria-label="Priorités, transferts et qualité">
+        <div class="tabs" role="tablist" aria-label="Panneaux">
+          <span class="tab-ind" id="tabInd" aria-hidden="true"></span>
+          <button class="tab" role="tab" id="tab-prio" aria-selected="true" aria-controls="p-prio" tabindex="0" data-p="prio">Priorités<span class="n" id="n-prio"></span></button>
+          <button class="tab" role="tab" id="tab-trans" aria-selected="false" aria-controls="p-trans" tabindex="-1" data-p="trans">Transferts<span class="n" id="n-trans"></span></button>
+          <button class="tab" role="tab" id="tab-qual" aria-selected="false" aria-controls="p-qual" tabindex="-1" data-p="qual">Qualité<span class="n" id="n-qual"></span></button>
+        </div>
+        <div class="tabpanel" id="p-prio" role="tabpanel" aria-labelledby="tab-prio"></div>
+        <div class="tabpanel" id="p-trans" role="tabpanel" aria-labelledby="tab-trans" hidden></div>
+        <div class="tabpanel" id="p-qual" role="tabpanel" aria-labelledby="tab-qual" hidden></div>
+      </aside>
+    </div>
+
+    <div class="grid lower">
+      <section class="panel" aria-labelledby="h-hourly">
+        <div class="panel-h"><h2 id="h-hourly">Stations vides et saturées, par heure</h2><span class="hint">48 dernières heures · heure de Paris · un trou = une interruption de collecte</span></div>
+        <div class="key"><span><i style="background:var(--empty)"></i>Part de stations vides</span><span><i style="background:var(--full)"></i>Part de stations saturées</span></div>
+        <div class="chart" id="hourly"></div>
+        <details class="data-table" id="hourlyTable"><summary>Voir les données en tableau</summary><div class="tbl" id="hourlyRows"></div></details>
+      </section>
+      <section class="panel" aria-labelledby="h-dist">
+        <div class="panel-h"><h2 id="h-dist">État du réseau</h2><span class="hint">instantané</span></div>
+        <div class="dist" id="dist"></div>
+      </section>
+    </div>
+
+    <footer id="footer"></footer>
+  </main>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

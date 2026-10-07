@@ -1,0 +1,117 @@
+{
+ "last_updated": 1791299325,
+ "ttl": 300,
+ "version": "2.3",
+ "data": {
+  "stations": [
+   {
+    "station_id": "1",
+    "name": "PRÉFECTURE",
+    "lat": 47.21984,
+    "lon": -1.554891,
+    "address": "Place du Port Communeau",
+    "rental_methods": [
+     "creditcard"
+    ],
+    "capacity": 33
+   },
+   {
+    "station_id": "3",
+    "name": "STRASBOURG",
+    "lat": 47.21682,
+    "lon": -1.551979,
+    "address": "4, rue des Carmélites - Place Tirant Lo Blanc",
+    "capacity": 15
+   },
+   {
+    "station_id": "4",
+    "name": "MOULIN",
+    "lat": 47.216668,
+    "lon": -1.554385,
+    "address": "18, rue du Moulin",
+    "capacity": 12
+   },
+   {
+    "station_id": "6",
+    "name": "PLACE DU CIRQUE",
+    "lat": 47.217597,
+    "lon": -1.556938,
+    "address": "7, allée Duquesne",
+    "rental_methods": [
+     "creditcard"
+    ],
+    "capacity": 21
+   },
+   {
+    "station_id": "8",
+    "name": "BOUCHERIE",
+    "lat": 47.216201,
+    "lon": -1.557112,
+    "address": "4, rue de la Boucherie",
+    "rental_methods": [
+     "creditcard"
+    ],
+    "capacity": 24
+   },
+   {
+    "station_id": "9",
+    "name": "GUÉPIN",
+    "lat": 47.215815,
+    "lon": -1.559017,
+    "address": "Angle rue du Calvaire / Rue Guépin",
+    "capacity": 14
+   },
+   {
+    "station_id": "10",
+    "name": "PICASSO",
+    "lat": 47.216207,
+    "lon": -1.533796,
+    "address": "12, mail Pablo Picasso",
+    "capacity": 40
+   },
+   {
+    "station_id": "11",
+    "name": "CALVAIRE",
+    "lat": 47.215579,
+    "lon": -1.560675,
+    "address": "8, rue du Calvaire - Place des Volontaires de la Défense Passive",
+    "capacity": 15
+   },
+   {
+    "station_id": "12",
+    "name": "DELORME",
+    "lat": 47.215158,
+    "lon": -1.563901,
+    "address": "1, boulevard Gabriel Guist'Hau - Place Delorme",
+    "rental_methods": [
+     "creditcard"
+    ],
+    "capacity": 20
+   },
+   {
+    "station_id": "13",
+    "name": "BRETAGNE SUD",
+    "lat": 47.216788,
+    "lon": -1.559161,
+    "address": "3, rue Pierre Chereau",
+    "capacity": 20
+   },
+   {
+    "station_id": "14",
+    "name": "SAINT FÉLIX",
+    "lat": 47.230334,
+    "lon": -1.556133,
+    "address": "35, Boulevard Amiral Courbet",
+    "capacity": 14
+   },
+   {
+    "station_id": "16",
+    "name": "ÉDOUARD NORMAND",
+    "lat": 47.219028,
+    "lon": -1.563419,
+    "address": "Face au 7, place Edouard Normand",
+    "capacity": 15
+   }
+  ]
+ }
+}

@@ -1,0 +1,428 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-07T19:16:53.140683+00:00",
+  "title": "Design System: MobilityPulse France",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground Ink",
+        "canonical": "oklch(15% 0.021 264)",
+        "tonalRamp": [
+          "#070b14",
+          "#212631",
+          "#3f4551",
+          "#606672",
+          "#838996",
+          "#a7aebc",
+          "#c7cedc",
+          "#e7effd"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel Ink",
+        "canonical": "oklch(19% 0.033 264)",
+        "tonalRamp": [
+          "#050b19",
+          "#1e2637",
+          "#3c4557",
+          "#5d6679",
+          "#7f899e",
+          "#a4aec3",
+          "#c3cee4",
+          "#e4efff"
+        ]
+      },
+      "panel-raised": {
+        "role": "neutral",
+        "displayName": "Raised Ink",
+        "canonical": "oklch(22% 0.042 263)",
+        "tonalRamp": [
+          "#030a1d",
+          "#1b263b",
+          "#39455c",
+          "#59667f",
+          "#7c8aa3",
+          "#a0aec9",
+          "#c0ceea",
+          "#e0efff"
+        ]
+      },
+      "raise": {
+        "role": "neutral",
+        "displayName": "Raised Ink 2",
+        "canonical": "oklch(26% 0.049 262)",
+        "tonalRamp": [
+          "#020a1f",
+          "#19263e",
+          "#374560",
+          "#576683",
+          "#798aa7",
+          "#9dafce",
+          "#bccfef",
+          "#ddefff"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(29% 0.057 263)",
+        "tonalRamp": [
+          "#010923",
+          "#172642",
+          "#344564",
+          "#546687",
+          "#778aac",
+          "#9bafd3",
+          "#bacef4",
+          "#daefff"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "oklch(36% 0.070 263)",
+        "tonalRamp": [
+          "#000728",
+          "#132548",
+          "#31446b",
+          "#51668f",
+          "#7389b4",
+          "#97aedb",
+          "#b6cefd",
+          "#d6efff"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text",
+        "canonical": "oklch(95% 0.019 266)",
+        "tonalRamp": [
+          "#080b13",
+          "#222630",
+          "#40454f",
+          "#616671",
+          "#848995",
+          "#a8aeba",
+          "#c8ceda",
+          "#e9effc"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Text Secondary",
+        "canonical": "oklch(77% 0.040 264)",
+        "tonalRamp": [
+          "#040a1c",
+          "#1d263a",
+          "#3a455b",
+          "#5b667e",
+          "#7d89a2",
+          "#a1aec8",
+          "#c1cee9",
+          "#e1efff"
+        ]
+      },
+      "text-tertiary": {
+        "role": "neutral",
+        "displayName": "Text Tertiary",
+        "canonical": "oklch(66% 0.047 264)",
+        "tonalRamp": [
+          "#030a1e",
+          "#1a263d",
+          "#38455e",
+          "#586681",
+          "#7b89a6",
+          "#9faecc",
+          "#beceed",
+          "#dfefff"
+        ]
+      },
+      "flow": {
+        "role": "primary",
+        "displayName": "Flow Blue",
+        "canonical": "oklch(77% 0.116 263)",
+        "tonalRamp": [
+          "#00003b",
+          "#041f5e",
+          "#224182",
+          "#4164a8",
+          "#6388cf",
+          "#87adf8",
+          "#a5ceff",
+          "#c5efff"
+        ]
+      },
+      "state-empty": {
+        "role": "state",
+        "displayName": "Empty Coral",
+        "canonical": "oklch(67% 0.159 22)",
+        "tonalRamp": [
+          "#360000",
+          "#5e0000",
+          "#860019",
+          "#af343a",
+          "#d85b5c",
+          "#ff817f",
+          "#ffa19e",
+          "#ffc2bd"
+        ]
+      },
+      "state-full": {
+        "role": "state",
+        "displayName": "Full Violet",
+        "canonical": "oklch(67% 0.145 287)",
+        "tonalRamp": [
+          "#120043",
+          "#280767",
+          "#43318d",
+          "#6355b4",
+          "#8479dc",
+          "#a89eff",
+          "#c7beff",
+          "#e8dfff"
+        ]
+      },
+      "state-low": {
+        "role": "state",
+        "displayName": "Low Amber",
+        "canonical": "oklch(67% 0.143 73)",
+        "tonalRamp": [
+          "#290000",
+          "#4c0d00",
+          "#703200",
+          "#955500",
+          "#bc7900",
+          "#e49e33",
+          "#ffbe58",
+          "#ffdf7b"
+        ]
+      },
+      "state-high": {
+        "role": "state",
+        "displayName": "High Blue",
+        "canonical": "oklch(62% 0.161 255)",
+        "tonalRamp": [
+          "#00004c",
+          "#001971",
+          "#004098",
+          "#0d64bf",
+          "#3c89e8",
+          "#62b0ff",
+          "#82d1ff",
+          "#a2f2ff"
+        ]
+      },
+      "state-ok": {
+        "role": "state",
+        "displayName": "Normal Green",
+        "canonical": "oklch(62% 0.128 163)",
+        "tonalRamp": [
+          "#001700",
+          "#003712",
+          "#005830",
+          "#007c50",
+          "#1ea173",
+          "#52c797",
+          "#75e8b6",
+          "#97ffd6"
+        ]
+      },
+      "state-out-of-service": {
+        "role": "state",
+        "displayName": "Out-of-service Slate",
+        "canonical": "oklch(58% 0.038 258)",
+        "tonalRamp": [
+          "#030b1b",
+          "#1a2739",
+          "#38465a",
+          "#59677c",
+          "#7b8aa1",
+          "#9fafc7",
+          "#bfcfe7",
+          "#dff0ff"
+        ]
+      },
+      "warning": {
+        "role": "state",
+        "displayName": "Warning Amber",
+        "canonical": "oklch(76% 0.147 81)",
+        "tonalRamp": [
+          "#260000",
+          "#481300",
+          "#6b3600",
+          "#905900",
+          "#b67d00",
+          "#dda221",
+          "#ffc34d",
+          "#ffe471"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The landing question, one per page."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel titles in the app."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text and UI labels."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Measured values: counts, times, scores."
+      }
+    },
+    "shadows": [
+      {
+        "name": "floating-panel",
+        "value": "0 10px 28px rgba(0, 0, 0, 0.5)",
+        "purpose": "The station panel floating over the map."
+      },
+      {
+        "name": "toast",
+        "value": "0 14px 40px rgba(0, 0, 0, 0.5)",
+        "purpose": "Transient notifications."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Entrances, reveals, press feedback, FLIP reordering."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "Movement on screen (spinner, truck easing)."
+      },
+      {
+        "name": "press",
+        "value": "140ms scale(0.97)",
+        "purpose": "Every pressable element."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "fade only, no transforms",
+        "purpose": "prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stack",
+        "value": "1100px"
+      },
+      {
+        "name": "compact",
+        "value": "760px"
+      },
+      {
+        "name": "phone",
+        "value": "600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action per view; the lightest object on the page.",
+      "html": "<button class=\"ds-btn-primary\">Accéder au projet</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border-radius:12px;font:600 16px/1 'Hanken Grotesk',system-ui,sans-serif;cursor:pointer;transition:transform 140ms cubic-bezier(.23,1,.32,1),border-color 160ms ease;background:#e8eefb;border:1px solid #e8eefb;color:#0a1020} .ds-btn-primary:hover{background:#fff} .ds-btn-primary:active{transform:scale(.97)} .ds-btn-primary:focus-visible{outline:2px solid #8db4ff;outline-offset:3px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A quieter companion action.",
+      "html": "<button class=\"ds-btn-secondary\">Documentation de l'API</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border-radius:12px;font:600 16px/1 'Hanken Grotesk',system-ui,sans-serif;cursor:pointer;transition:transform 140ms cubic-bezier(.23,1,.32,1),border-color 160ms ease;background:#101a2e;border:1px solid #2a3d63;color:#e8eefb} .ds-btn-secondary:hover{border-color:#8db4ff} .ds-btn-secondary:active{transform:scale(.97)} .ds-btn-secondary:focus-visible{outline:2px solid #8db4ff;outline-offset:3px}"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "A state filter with its colour dot and live count; pressed state is raised.",
+      "html": "<button class=\"ds-chip\" aria-pressed=\"true\"><i></i>Vides <span>7</span></button>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 13px;border-radius:999px;border:1px solid #2a3d63;background:#16233b;color:#e8eefb;font:400 14px 'Hanken Grotesk',system-ui,sans-serif;cursor:pointer;transition:transform 140ms cubic-bezier(.23,1,.32,1)} .ds-chip i{width:8px;height:8px;border-radius:50%;background:#e66767} .ds-chip span{font-family:'Spline Sans Mono',monospace;color:#8493b0;font-size:13px} .ds-chip:active{transform:scale(.97)} .ds-chip:focus-visible{outline:2px solid #8db4ff;outline-offset:3px}"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Live dot plus a sentence stating freshness, time and age.",
+      "html": "<div class=\"ds-pill\"><span class=\"ds-dot\"></span><b>En direct</b> · 21:13 (il y a 12 s)</div>",
+      "css": ".ds-pill{display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:8px 16px;border-radius:999px;background:#0c1322;border:1px solid #1b2a47;color:#a8b5cf;font:400 14px 'Hanken Grotesk',system-ui,sans-serif} .ds-pill b{color:#e8eefb;font-weight:600} .ds-dot{width:10px;height:10px;border-radius:50%;background:#199e70}"
+    },
+    {
+      "name": "KPI Cell",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "A measured figure in the KPI strip: dot and label, mono value, small caption.",
+      "html": "<div class=\"ds-kpi\"><div class=\"l\"><i></i>Vides</div><div class=\"v\">7</div><div class=\"s\">6,9 % des stations actives</div></div>",
+      "css": ".ds-kpi{background:#0c1322;border:1px solid #1b2a47;border-radius:16px;padding:16px 18px;color:#e8eefb;font-family:'Hanken Grotesk',system-ui,sans-serif;width:220px} .ds-kpi .l{display:flex;align-items:center;gap:8px;font-size:14px;color:#a8b5cf} .ds-kpi i{width:8px;height:8px;border-radius:50%;background:#e66767} .ds-kpi .v{margin-top:8px;font:600 34px/1 'Spline Sans Mono',monospace;letter-spacing:-.02em} .ds-kpi .s{margin-top:7px;font-size:13px;color:#8493b0}"
+    },
+    {
+      "name": "Priority Row",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Ranked station with need, score bar and time in state.",
+      "html": "<button class=\"ds-row\"><span class=\"rk\">1</span><span><b>Édouard Normand</b><small>Besoin de places · écart 7 vélos · Saturée depuis 1,8 h</small></span><span class=\"sc\">98</span></button>",
+      "css": ".ds-row{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;width:380px;padding:11px 10px;border:0;border-radius:12px;background:#0c1322;color:#e8eefb;text-align:left;cursor:pointer;font-family:'Hanken Grotesk',system-ui,sans-serif} .ds-row:hover{background:#101a2e} .ds-row .rk{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;background:rgba(144,133,233,.24);border:1px solid rgba(144,133,233,.55);font:600 14px 'Spline Sans Mono',monospace} .ds-row b{display:block;font-size:15px} .ds-row small{display:block;margin-top:2px;font-size:13px;color:#a8b5cf} .ds-row .sc{font:600 18px 'Spline Sans Mono',monospace} .ds-row:focus-visible{outline:2px solid #8db4ff;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Network Room",
+    "overview": "The interface is a room where the network is on the wall. Stations are drawn where they really are, coloured by what they are doing, and everything else (panels, type, chrome) stays quiet enough that the data is the loudest thing on screen. It is dark because it is meant to be read on a projector in a dim room or on a laptop at the end of a day, not because dark is a default.\n\nThe language is wayfinding, not dashboards-with-glow: hairline rules, ring stations, a transit-style line for the data path, signage-weight headings. Colour is spent on meaning. Six state colours are the only saturated hues on screen; the primary action is a light button, not a neon accent. Motion explains the live system (a packet travelling, a station changing state, a truck driving a transfer) and goes calm under `prefers-reduced-motion`.",
+    "keyCharacteristics": [
+      "Ink ground, hairline panels, no shadows at rest.",
+      "State colours are the data language: vide, saturée, faible, élevée, normale, hors service.",
+      "Figures in a mono face with tabular numerals; headings in a characterful grotesque.",
+      "Truth shown, not styled away: freshness (live / en retard / périmé) is always visible."
+    ],
+    "rules": [
+      {
+        "name": "The Meaning Rule",
+        "body": "A saturated colour on screen is a station state or a status. Decoration never borrows them.",
+        "section": "colors"
+      },
+      {
+        "name": "The Light Primary Rule",
+        "body": "The main action is the lightest object in the room (Text on Ground), never a coloured button.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measured Mono Rule",
+        "body": "Mono is for numbers, times and codes. Never for \"technical\" decoration.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-At-Rest Rule",
+        "body": "No shadow on a resting panel. A shadow means \"this floats above the map\".",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do show data age and its cause next to every number that could be stale.",
+      "Do keep state colours in the validated order and pair them with a label or count.",
+      "Do animate transform and opacity; ease out with cubic-bezier(0.23, 1, 0.32, 1); keep UI transitions under 300ms.",
+      "Do provide a calm `prefers-reduced-motion` variant for every animation."
+    ],
+    "donts": [
+      "Don't use a state colour for decoration or a coloured primary button.",
+      "Don't add eyebrow labels above headings, thick side stripes, gradient text, or glyphs standing in for icons.",
+      "Don't present stale or missing data as fresh; show absence as absence.",
+      "Don't animate layout properties (width, height, margin, padding); use grid-template-rows, transform or opacity."
+    ]
+  }
+}

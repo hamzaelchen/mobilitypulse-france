@@ -1,0 +1,5 @@
+# Keep LF line endings everywhere (Docker, shell and CI run on Linux), even when checked out on Windows
+* text=auto eol=lf
+*.png binary
+*.woff2 binary
+*.parquet binary

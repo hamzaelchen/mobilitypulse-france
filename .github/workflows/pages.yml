@@ -1,0 +1,51 @@
+name: Demo (GitHub Pages)
+
+# Publishes the frozen demo: the front in src/web/static plus the snapshot committed in demo/data.
+# No server is involved: the pages read the snapshot files (see scripts/build_demo.py).
+# One-time setup in the repository: Settings > Pages > Source: "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - demo/**
+      - src/web/static/**
+      - scripts/build_demo.py
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build the static site (relative paths, so it works under the repository path)
+        run: python scripts/build_demo.py --repo-url "${{ github.server_url }}/${{ github.repository }}"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: demo-site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

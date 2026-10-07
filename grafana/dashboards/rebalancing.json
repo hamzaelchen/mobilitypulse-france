@@ -1,0 +1,644 @@
+{
+  "uid": "mp-rebalancing",
+  "title": "Rebalancing",
+  "description": "Station priorities and recommended bike transfers (heuristic risk, not a trained model).",
+  "tags": [
+    "mobilitypulse"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "timezone": "utc",
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Need bikes",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS value FROM mobility.rebalancing_priority WHERE need_type = 'needs_bikes'",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Empty or low stations (fill rate below 15 %)."
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Need docks",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS value FROM mobility.rebalancing_priority WHERE need_type = 'needs_docks'",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Full or high stations (fill rate above 85 %)."
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Transfers",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS value FROM mobility.rebalancing_transfers",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Recommended transfers, donor to receiver."
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Bikes to move",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT coalesce(sum(bikes), 0) AS value FROM mobility.rebalancing_transfers",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Unplanned gap (bikes)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT coalesce(sum(unplanned_gap), 0) AS value FROM mobility.rebalancing_priority",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Bikes still missing or in excess after the recommended transfers: no donor or receiver within the maximum distance, or below the minimum transfer size."
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Computed at",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT (extract(epoch FROM max(computed_at)) * 1000)::bigint AS \"computed_at\" FROM mobility.rebalancing_priority",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "mappings": [],
+          "unit": "dateTimeAsIso"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "text",
+      "title": "How to read this",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 4
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**The risk behind the priority score is a heuristic, not a trained model.** It combines the current fill rate, shifted by the last 30-minute trend (`risk_source = heuristic_trend`), with how long a station has been empty or full. Thresholds (15 % / 85 %), target (50 %), weights (50 / 50), the 3 km radius and the 2-20 bikes per transfer are **conventions**, not measurements. Transfers are a greedy suggestion (no vehicle, route or time model)."
+      }
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "Priority stations (top 20)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT priority_rank AS \"Rank\", station_name AS \"Station\", state AS \"State\", round(priority_score::numeric, 1) AS \"Score\", round((fill_rate * 100)::numeric, 0) AS \"Fill %\", num_bikes_available AS \"Bikes\", bikes_gap AS \"Gap\", planned_in AS \"In\", planned_out AS \"Out\", unplanned_gap AS \"Unplanned\" FROM mobility.rebalancing_priority ORDER BY priority_rank LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "empty": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "low": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "full": {
+                        "color": "purple",
+                        "index": 2
+                      },
+                      "high": {
+                        "color": "blue",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "description": "Score 0-100 = 50 % urgency + 50 % criticality. Gap = bikes to receive (needs bikes) or to remove (needs docks)."
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Recommended transfers",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT transfer_rank AS \"Rank\", from_station_name AS \"From\", to_station_name AS \"To\", bikes AS \"Bikes\", round(distance_km::numeric, 2) AS \"km\", to_state AS \"State\", round(priority_score::numeric, 1) AS \"Score\" FROM mobility.rebalancing_transfers ORDER BY transfer_rank LIMIT 50",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "empty": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "low": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "full": {
+                        "color": "purple",
+                        "index": 2
+                      },
+                      "high": {
+                        "color": "blue",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "description": "Ordered by the priority of the receiving station, then by distance (haversine)."
+    },
+    {
+      "id": 10,
+      "type": "geomap",
+      "title": "Stations needing rebalancing (size = priority score)",
+      "description": "Red: needs bikes. Purple: needs docks. Grey: no need. Marker size follows the priority score. Out-of-service stations are grey and never used.",
+      "datasource": {
+        "type": "postgres",
+        "uid": "mobilitypulse-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 16
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "mobilitypulse-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT station_name, latitude, longitude, priority_score, state, CASE need_type WHEN 'needs_bikes' THEN 1 WHEN 'needs_docks' THEN 2 ELSE 0 END AS need_code FROM mobility.rebalancing_priority",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "gray",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              },
+              {
+                "color": "purple",
+                "value": 2
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "view": {
+          "id": "coords",
+          "lat": 47.2184,
+          "lon": -1.5536,
+          "zoom": 13,
+          "allLayers": true
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": true,
+          "showAttribution": true
+        },
+        "basemap": {
+          "type": "xyz",
+          "name": "OpenStreetMap",
+          "config": {
+            "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "attribution": "© OpenStreetMap contributors",
+            "minZoom": 1,
+            "maxZoom": 19
+          }
+        },
+        "tooltip": {
+          "mode": "details"
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Stations",
+            "tooltip": true,
+            "location": {
+              "mode": "coords",
+              "latitude": "latitude",
+              "longitude": "longitude"
+            },
+            "config": {
+              "showLegend": false,
+              "style": {
+                "size": {
+                  "field": "priority_score",
+                  "min": 5,
+                  "max": 22,
+                  "fixed": 8
+                },
+                "color": {
+                  "field": "need_code",
+                  "fixed": "gray"
+                },
+                "opacity": 0.8,
+                "symbol": {
+                  "mode": "fixed",
+                  "fixed": "img/icons/marker/circle.svg"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
