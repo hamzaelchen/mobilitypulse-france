@@ -93,9 +93,10 @@ sans mot de passe ; un test vérifie que les fichiers de configuration versionn�
 Compose, provisioning Grafana) n'en contiennent aucun. Grafana n'utilise qu'un
 rôle PostgreSQL en lecture seule. En CI, le mot de passe de la base est généré à l'exécution et masqué.
 
-**Votre CI tourne-t-elle ?** Je ne l'ai pas exécutée sur GitHub (le dépôt n'y est pas). Je l'ai validée
-avec `actionlint` et rejoué ses commandes localement, ce qui a trouvé une erreur réelle (une liste de
-migrations oubliée dans un test). Deux garde-fous évitent un vert trompeur : un service absent fait
+**Votre CI tourne-t-elle ?** Oui : un premier run sur GitHub Actions (8 octobre 2026) a fait passer
+ses 4 jobs (19 s à 81 s). Avant cela, je l'avais validée avec `actionlint` et rejoué ses commandes
+localement, ce qui avait trouvé une erreur réelle (une liste de migrations oubliée dans un test).
+Un seul run : je ne peux pas parler de sa stabilité dans la durée. Deux garde-fous évitent un vert trompeur : un service absent fait
 échouer les tests au lieu de les ignorer, et un script échoue si trop de tests sont ignorés.
 
 **Et la montée en charge ?** Elle n'est pas démontrée : un broker, Silver en `local[2]`, un chargeur
@@ -107,7 +108,7 @@ sont identifiées, pas mesurées.
 - Que le projet « prédit » quoi que ce soit : il n'y a pas de modèle entraîné.
 - Que les recommandations « améliorent le service » : non mesuré.
 - Que c'est « prêt pour la production » : mono-nœud, qualité/ML/compaction manuels, aucune alerte
-  active, CI jamais exécutée sur GitHub.
+  active, une seule exécution de la CI sur GitHub.
 - Qu'il y a « exactly-once » : c'est at-least-once, avec déduplication en aval.
 - Des chiffres de performance au-delà de ce qui a été mesuré : une fenêtre de 19 minutes (délai du
   poll au navigateur : 41 à 104 s, médiane 77 s) et un instantané de mémoire. Pas de benchmark, pas

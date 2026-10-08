@@ -400,9 +400,10 @@ environnement Python vierge ; `postgres-tests` rejoué contre la vraie base (il 
 migrations oubliée dans un test) et vérifié en mode CI **avec la base injoignable** (les tests
 échouent, ils ne sont pas ignorés) ; les cinq fichiers de `spark-tests` rejoués dans le conteneur
 (38 tests, 0 ignoré) ; résolution des dépendances `.[dev,spark]` à blanc.
-**Non vérifié** : l'exécution sur GitHub (le dépôt n'y est pas), l'installation de Java par
-`actions/setup-java`, la disponibilité et le comportement des versions majeures d'actions
-(`checkout@v4`, `setup-python@v5`, `setup-java@v4`), la durée sur les runners hébergés.
+**Exécution sur GitHub (8 octobre 2026, premier push)** : les 4 jobs réussissent (`lint-and-unit`
+19 s, `compose-config` 7 s, `postgres-tests` 43 s, `spark-tests` 81 s), ce qui valide Java via
+`actions/setup-java` et les versions d'actions (`checkout@v4`, `setup-python@v5`, `setup-java@v4`).
+**Non vérifié** : la stabilité d'un run à l'autre (un seul run a eu lieu).
 
 ## Chemin temps réel et interface (chantier A à D)
 
@@ -661,7 +662,7 @@ Conséquences durables :
   sur la dernière exécution) n'a pas été analysé ; la tendance suppose des créneaux contigus.
 - **Tables de rééquilibrage et Grafana** : les tables du dashboard défilent horizontalement (largeurs
   de colonnes par défaut) ; pas de tracé des itinéraires sur la carte.
-- **CI jamais exécutée sur GitHub** et non planifiée ; pas de déploiement automatique, pas de scan de
+- **CI exécutée une seule fois sur GitHub** (réussie) et non planifiée ; pas de déploiement automatique, pas de scan de
   dépendances, pas d'analyse de sécurité.
 - **Qualité des données** : seuils non calibrés, lancement manuel, pas d'alerte (voir la section
   dédiée).

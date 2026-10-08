@@ -34,7 +34,7 @@ rééquilibrages.
 | Mise à jour automatique | fonctionne | `live-updater` (état courant, priorités) et `gold-refresher` (séries, taux horaires) ; aucun lancement manuel ; panne de PostgreSQL simulée puis reprise seule |
 | Interface web (accueil + application, flux SSE) | fonctionne | délai mesuré poll → navigateur ; fraîcheur et cause d'un retard affichées ; mode mouvement réduit |
 | Qualité des données | fonctionne | 26 contrôles aux seuils explicites, historisés et affichés |
-| Intégration continue | écrite et validée statiquement | **jamais exécutée sur GitHub** (voir plus bas) |
+| Intégration continue | fonctionne | exécutée sur GitHub le 8 octobre 2026 : les 4 jobs passent (voir plus bas) |
 
 ## Architecture
 
@@ -150,8 +150,9 @@ python scripts/build_demo.py --repo-url https://github.com/<utilisateur>/<dépô
 
 Publication (GitHub Pages, Render ou tout hébergeur statique), vérification sous un sous-chemin et
 mise à jour : [docs/runbook.md](docs/runbook.md#publier-la-démo-figée). Le workflow
-`.github/workflows/pages.yml` publie à chaque push de `main` ; il n'a **jamais tourné** (le dépôt
-n'est pas encore sur GitHub), seule sa syntaxe est validée par `actionlint`.
+`.github/workflows/pages.yml` publie à chaque push de `main`. Premier lancement le 8 octobre 2026 :
+la construction du site réussit sur un runner Ubuntu, la publication reste bloquée tant que Pages
+n'est pas activé dans les réglages du dépôt (Source : GitHub Actions).
 
 ## Résultats mesurés (6 octobre 2026)
 
@@ -221,9 +222,11 @@ Deux garde-fous évitent un vert trompeur : en CI (`CI_REQUIRE_SERVICES=1`) un s
 **échouer** les tests au lieu de les ignorer, et `scripts/ci_assert_skips.py` échoue si trop de tests
 sont ignorés ou si trop peu ont tourné.
 
-**Ce qui est vérifié, et ce qui ne l'est pas.** Je n'ai pas pu exécuter GitHub Actions : le dépôt
-n'est pas sur GitHub. Le workflow a été validé statiquement avec `actionlint` (aucune alerte), et
-ses commandes ont été **rejouées localement** : le job `lint-and-unit` dans un environnement
+**Ce qui est vérifié, et ce qui ne l'est pas.** Le workflow a tourné pour la première fois sur
+GitHub Actions le 8 octobre 2026, au premier push : **les 4 jobs ont réussi** (`lint-and-unit` 19 s,
+`compose-config` 7 s, `postgres-tests` 43 s, `spark-tests` 81 s), ce qui valide aussi l'installation de
+Java par `actions/setup-java` et les versions d'actions utilisées. Avant cela, il avait été validé
+statiquement avec `actionlint` (aucune alerte), et ses commandes **rejouées localement** : le job `lint-and-unit` dans un environnement
 Python vierge (installation, lint, tests), le job `postgres-tests` contre la vraie base (c'est ce
 rejeu qui a révélé une liste de migrations oubliée dans un test), les fichiers du job `spark-tests`
 dans le conteneur Spark (38 tests, 0 ignoré), et la résolution des dépendances Spark à blanc.
@@ -231,9 +234,8 @@ Après l'ajout de l'interface, le job `postgres-tests` a été rejoué dans un e
 vierge avec ses dépendances (`.[dev,loader,web]`) et sa liste de tests : 190 réussis, 1 ignoré
 (la comparaison avec PySpark), 191 au total, contrôle d'`assert_skips` réussi ; `actionlint` n'a
 signalé aucune alerte sur le workflow modifié.
-Restent **non vérifiés** : l'installation de Java par `actions/setup-java`, les versions majeures
-des actions utilisées (`checkout@v4`, `setup-python@v5`, `setup-java@v4`), et la durée réelle sur
-les runners.
+Ces durées viennent d'une seule exécution. Un seul run a eu lieu : la stabilité d'un run à l'autre
+(tests dépendant du temps, du réseau) n'est pas mesurée.
 
 ## Décisions et limites
 
